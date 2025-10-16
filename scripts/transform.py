@@ -8,6 +8,7 @@ def transform_data(reqr_df):
     return adalah hasil akhir dari transform
     """
 
+
     # merapikan column company agar tidak ada value rating
     reqr_df['company'] = reqr_df['company'].str.split('\n').str[0]
 
@@ -18,6 +19,7 @@ def transform_data(reqr_df):
 
     # pemisahan value berdasarkan comma dan tambah column area_code, n=1 mendeteksi split hanya untuk satu comma saja
     reqr_df[['location', 'area_code']] = reqr_df['location'].str.split(', ', n=1, expand=True)
+
     # mitigasi untuk yang tanpa area code, diberikan code Not Applicable
     reqr_df['area_code'] = reqr_df['area_code'].fillna('Not Applicable')
 
@@ -92,10 +94,52 @@ def transform_data(reqr_df):
     # mengubah column tahun menjadi int64
     reqr_df['company_founded'] = reqr_df['company_founded'].astype('Int64')
 
-    # reqr_df = reqr_df.reset_index(drop=True)
+    #____________________________________________________________________
 
-    # return reqr_df
+    #ganti company_size dan company_type menjadi unknown jika kosong, untuk company_sector dan company_industry tidak perlu karena tidak ada data Unknown dan dibiarkan saja
+    reqr_df['company_size'] = reqr_df['company_size'].fillna('Unknown')
+    reqr_df['company_type'] = reqr_df['company_type'].fillna('Unknown')
+    # reqr_df['company_sector'] = reqr_df['company_sector'].fillna('Unknown')
+
+    #ganti company_revenue menjadi Unknown / Not Applicable jika kosong
+    reqr_df['company_revenue'] = reqr_df['company_revenue'].fillna('Unknown / Non-Applicable')
+
     
-    return reqr_df[['company', 'company_rating', 'location', "job_title", "job_description", 'area_code', 'salary_estimate_yr', 
+    return reqr_df[['company', 'company_rating', 'location', "job_title", "job_description", 'area_code', 'currency','salary_estimate_yr', 
                     'comp_size_low', 'company_size', 'company_type', 'company_sector', 'company_industry', 'company_founded', 
                     'company_max_rev', 'company_revenue', 'jakarta_time' ]]
+
+
+
+
+def transform_fit(prod_df):
+    """
+    Transform data requirements dan
+
+    return adalah hasil akhir dari transform
+    """
+
+    #ambil data currency dan ganti simbol rupee ke Rs
+    prod_df['currency'] = prod_df['actual_price'].str[0]
+    prod_df['currency'] = prod_df['currency'].str.replace('?', 'Rs')
+
+    #cleaning kedua price dan jadikan integer
+    prod_df['actual_price']= prod_df['actual_price'].str[1:]
+    prod_df['actual_price']= pd.to_numeric(prod_df['actual_price'].str.replace(",", ""), errors='coerce').astype(float)
+
+    prod_df['discount_price']= prod_df['discount_price'].str[1:]
+    prod_df['discount_price']= pd.to_numeric(prod_df['discount_price'].str.replace(",", ""), errors='coerce').astype(float)
+    prod_df['discount_price']= prod_df['discount_price'].fillna(0)
+
+
+    #rapikan rating ke NaN jika bukan angka numerik
+    prod_df['ratings'] = pd.to_numeric(prod_df['ratings'], errors='coerce').astype(float)
+
+    #rapikan no_of_rating ke NaN jika bukan angka numerik
+    prod_df['no_of_ratings'] = pd.to_numeric(prod_df['no_of_ratings'].str.replace(",", ""), errors='coerce').astype('Int64')
+
+    #tambah column final_price untuk memberikan harga setelah discount
+    prod_df['final_price'] = prod_df['actual_price'] - prod_df['discount_price']
+
+    return prod_df[['main_category', 'sub_category', 'ratings', 'no_of_ratings', 'currency', 'actual_price', 'discount_price', 'final_price']] 
+                    # ,'image', 'link']]

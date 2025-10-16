@@ -11,7 +11,7 @@ def ekstrak_csv(path):
     return = hasil extract 
 
     """
-    df = pd.read_csv(path, index_col=0)
+    df = pd.read_csv(path, index_col=0, encoding='utf-8')
     return df
 
 def ekstrak2_csv(path):
@@ -46,5 +46,6 @@ def ekstrak2_csv(path):
     ]
     df = pd.read_csv(path, usecols = usecols)
     # df = pd.read_csv(path, index_col=0, usecols = usecols)
+    # df = pd.read_csv(path, index_col=0)
 
     return df
