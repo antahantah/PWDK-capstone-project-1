@@ -129,7 +129,7 @@ def transform_fit(prod_df):
 
     prod_df['discount_price']= prod_df['discount_price'].str[1:]
     prod_df['discount_price']= pd.to_numeric(prod_df['discount_price'].str.replace(",", ""), errors='coerce').astype(float)
-    prod_df['discount_price']= prod_df['discount_price'].fillna(0)
+    # prod_df['discount_price']= prod_df['discount_price'].fillna(0)
 
 
     #rapikan rating ke NaN jika bukan angka numerik
@@ -138,8 +138,12 @@ def transform_fit(prod_df):
     #rapikan no_of_rating ke NaN jika bukan angka numerik
     prod_df['no_of_ratings'] = pd.to_numeric(prod_df['no_of_ratings'].str.replace(",", ""), errors='coerce').astype('Int64')
 
-    #tambah column final_price untuk memberikan harga setelah discount
-    prod_df['final_price'] = prod_df['actual_price'] - prod_df['discount_price']
+    #tambah column final_price untuk memberikan harga setelah discount atau harga normal jika tidak ada diskon
+    prod_df['final_price'] = prod_df['discount_price'].fillna(prod_df['actual_price'])
 
-    return prod_df[['main_category', 'sub_category', 'ratings', 'no_of_ratings', 'currency', 'actual_price', 'discount_price', 'final_price']] 
+    #pendetailan berapa besar diskon yang diberikan
+    prod_df['discount_percent(%)'] = ((prod_df['actual_price'] - prod_df['final_price']) / prod_df['actual_price']) * 100
+    prod_df['discount_percent(%)'] = prod_df['discount_percent(%)'].round(2)
+
+    return prod_df[['main_category', 'sub_category', 'ratings', 'no_of_ratings', 'currency', 'actual_price', 'discount_price', 'discount_percent(%)', 'final_price']] 
                     # ,'image', 'link']]
